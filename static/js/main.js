@@ -44,3 +44,18 @@ async function getSuggestions() {
         console.error('Error:', error);
     }
 }
+
+// Add event listeners for Enter key
+document.getElementById('sentence').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('target-word').focus();
+    }
+});
+
+document.getElementById('target-word').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        getSuggestions();
+    }
+});
