@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contextual Word Suggester</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Contextual Word Suggester</h1>
+        <div class="input-section">
+            <textarea id="sentence" placeholder="Enter your sentence..."></textarea>
+            <input type="text" id="target-word" placeholder="Enter the word you want to replace...">
+            <button onclick="getSuggestions()">Get Suggestions</button>
+        </div>
+        <div id="results" class="results-section"></div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
