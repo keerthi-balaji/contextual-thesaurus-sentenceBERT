@@ -33,6 +33,40 @@ class ContextualWordSuggester:
             'NN': wordnet.NOUN,
             'NNS': wordnet.NOUN,
         }
+        
+        # Add verb forms dictionary
+        self.verb_forms = {
+            'VBD': 'past',       # expected, anticipated
+            'VBN': 'past',       # expected, anticipated
+            'VBG': 'gerund',     # expecting, anticipating
+            'VBZ': 'present',    # expects, anticipates
+            'VBP': 'present',    # expect, anticipate
+            'VB': 'base'         # expect, anticipate
+        }
+
+    def _adjust_verb_form(self, word: str, original_pos: str) -> str:
+        """Adjust verb to match the original word's tense"""
+        from nltk.stem import WordNetLemmatizer
+        lemmatizer = WordNetLemmatizer()
+        
+        base_form = lemmatizer.lemmatize(word, 'v')
+        
+        if original_pos in ['VBD', 'VBN']:  # Past tense/participle
+            if base_form.endswith('e'):
+                return base_form + 'd'
+            return base_form + 'ed'
+        elif original_pos == 'VBG':  # Present participle
+            if base_form.endswith('e'):
+                return base_form[:-1] + 'ing'
+            return base_form + 'ing'
+        elif original_pos == 'VBZ':  # 3rd person singular
+            if base_form.endswith(('s', 'sh', 'ch', 'x', 'z')):
+                return base_form + 'es'
+            elif base_form.endswith('y'):
+                return base_form[:-1] + 'ies'
+            return base_form + 's'
+        
+        return base_form
 
     def get_suggestions(self, sentence: str, target_word: str, top_k: int = 5) -> List[Tuple[str, float, str]]:
         # Get word's POS in context
@@ -48,23 +82,38 @@ class ContextualWordSuggester:
         
         # Get synonyms from WordNet
         synonyms = set()
+        original_pos = None
+        target_word_lower = target_word.lower()
+        
+        # Find original POS
+        for word, pos in pos_tags:
+            if word.lower() == target_word_lower:
+                word_pos = self.pos_map.get(pos)
+                original_pos = pos
+                break
+    
         for synset in wordnet.synsets(target_word):
-            # Only use synsets matching the POS if we found one
             if word_pos and synset.pos() != word_pos:
                 continue
                 
-            # Add both lemma names and similar words
             for lemma in synset.lemmas():
-                if lemma.name().lower() != target_word.lower():
-                    synonyms.add(lemma.name())
-            
-            # Add similar words for adjectives
-            if synset.pos() == wordnet.ADJ:
-                for similar in synset.similar_tos():
-                    for lemma in similar.lemmas():
-                        if lemma.name().lower() != target_word.lower():
-                            synonyms.add(lemma.name())
-        
+                suggested_word = lemma.name().lower()
+                # Skip if the word is the same as target (in any form)
+                if (suggested_word == target_word_lower or 
+                    suggested_word + 'ed' == target_word_lower or 
+                    suggested_word + 'd' == target_word_lower):
+                    continue
+                    
+                # Adjust verb form if it's a verb
+                if word_pos == wordnet.VERB:
+                    adjusted_word = self._adjust_verb_form(suggested_word, original_pos)
+                    # Double check the adjusted word isn't the same as target
+                    if adjusted_word.lower() != target_word_lower:
+                        synonyms.add(adjusted_word)
+                else:
+                    if suggested_word != target_word_lower:
+                        synonyms.add(suggested_word)
+
         if not synonyms:
             return []
 
