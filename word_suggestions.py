@@ -36,12 +36,12 @@ class ContextualWordSuggester:
         
         # Add verb forms dictionary
         self.verb_forms = {
-            'VBD': 'past',       # expected, anticipated
-            'VBN': 'past',       # expected, anticipated
-            'VBG': 'gerund',     # expecting, anticipating
-            'VBZ': 'present',    # expects, anticipates
-            'VBP': 'present',    # expect, anticipate
-            'VB': 'base'         # expect, anticipate
+            'VBD': 'past',       
+            'VBN': 'past',       
+            'VBG': 'gerund',     
+            'VBZ': 'present',    
+            'VBP': 'present',    
+            'VB': 'base'         
         }
 
     def _adjust_verb_form(self, word: str, original_pos: str) -> str:
